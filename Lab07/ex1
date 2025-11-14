@@ -1,0 +1,47 @@
+import pymc as pm
+import arviz as az
+import numpy as np
+
+
+data = np.array([56, 60, 58, 55, 57, 59, 61, 56, 58, 60])
+
+
+x = data.mean()  
+
+with pm.Model() as model_weak_prior:
+   
+    mu = pm.Normal("mu", mu=x, sigma=10)
+    sigma = pm.HalfNormal("sigma", sigma=10)
+
+    # verosimilitatea 
+    obs = pm.Normal("obs", mu=mu, sigma=sigma, observed=data)
+
+    
+    trace_weak = pm.sample(2000, tune=2000, chains=2, random_seed=42,target_accept=0.9)
+
+
+#rez pt prior slab 
+print(az.summary(trace_weak, hdi_prob=0.95))
+
+
+
+mean_freq = data.mean()
+std_freq = data.std(ddof=1)
+
+
+print("media =", mean_freq)
+print("deviatia standard =", std_freq)
+
+
+
+
+with pm.Model() as model_strong_prior:
+    mu2 = pm.Normal("mu", mu=50, sigma=1)
+    sigma2 = pm.HalfNormal("sigma", sigma=10)
+
+    obs2 = pm.Normal("obs", mu=mu2, sigma=sigma2, observed=data)
+
+    trace_strong = pm.sample(2000, tune=2000, chains=2, target_accept=0.9)
+
+#pt prior puternic
+print(az.summary(trace_strong, hdi_prob=0.95))
